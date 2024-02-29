@@ -323,56 +323,14 @@ die(const char *errstr, ...)
 void
 drawbar(void)
 {
-	XftColor *col;
-	int c, cc, fc, width;
-	char *name = NULL;
+	int c;
 
-	if (nclients == 0) {
-		dc.x = 0;
-		dc.w = ww;
-		XFetchName(dpy, win, &name);
-		drawtext(name ? name : "", dc.norm);
-		XCopyArea(dpy, dc.drawable, win, dc.gc, 0, 0, ww, bh, 0, 0);
-		XSync(dpy, False);
-
-		return;
-	}
-
-	width = ww;
-	cc = ww / tabwidth;
-	if (nclients > cc)
-		cc = (ww - TEXTW(before) - TEXTW(after)) / tabwidth;
-
-	if ((fc = getfirsttab()) + cc < nclients) {
-		dc.w = TEXTW(after);
-		dc.x = width - dc.w;
-		drawtext(after, dc.sel);
-		width -= dc.w;
-	}
-	dc.x = 0;
-
-	if (fc > 0) {
-		dc.w = TEXTW(before);
-		drawtext(before, dc.sel);
-		dc.x += dc.w;
-		width -= dc.w;
-	}
-
-	cc = MIN(cc, nclients);
-	for (c = fc; c < fc + cc; c++) {
-		dc.w = width / cc;
-		if (c == sel) {
-			col = dc.sel;
-			dc.w += width % cc;
-		} else {
-			col = clients[c]->urgent ? dc.urg : dc.norm;
+	if (bh != 0) {
+		bh = 0;
+		for (int c = 0; c < nclients; c++) {
+			XMoveResizeWindow(dpy, clients[c]->win, 0, bh, ww, wh-bh);
 		}
-		drawtext(clients[c]->name, col);
-		dc.x += dc.w;
-		clients[c]->tabx = dc.x;
 	}
-	XCopyArea(dpy, dc.drawable, win, dc.gc, 0, 0, ww, bh, 0, 0);
-	XSync(dpy, False);
 }
 
 void
@@ -991,7 +949,7 @@ setup(void)
 	screen = DefaultScreen(dpy);
 	root = RootWindow(dpy, screen);
 	initfont(font);
-	bh = dc.h = dc.font.height + 2;
+	bh = dc.h = 0;
 
 	/* init atoms */
 	wmatom[WMDelete] = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
