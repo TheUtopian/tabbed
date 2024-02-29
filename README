@@ -1,6 +1,4 @@
-tabbed - generic tabbed interface
-=================================
-tabbed is a simple tabbed X window container.
+The personal fork of [tabbed](http://tools.suckless.org/tabbed/)
 
 Requirements
 ------------
