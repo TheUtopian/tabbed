@@ -1,4 +1,4 @@
-The personal fork of [tabbed](http://tools.suckless.org/tabbed/)
+# The personal fork of <a href="http://tools.suckless.org/tabbed/">tabbed</a>
 
 Requirements
 ------------
