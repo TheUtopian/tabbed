@@ -97,7 +97,6 @@ static void createnotify(const XEvent *e);
 static void destroynotify(const XEvent *e);
 static void die(const char *errstr, ...);
 static void drawbar(void);
-static void drawtext(const char *text, XftColor col[ColLast]);
 static void *ecalloc(size_t n, size_t size);
 static void *erealloc(void *o, size_t size);
 static void expose(const XEvent *e);
@@ -331,43 +330,6 @@ drawbar(void)
 			XMoveResizeWindow(dpy, clients[c]->win, 0, bh, ww, wh-bh);
 		}
 	}
-}
-
-void
-drawtext(const char *text, XftColor col[ColLast])
-{
-	int i, j, x, y, h, len, olen;
-	char buf[256];
-	XftDraw *d;
-	XRectangle r = { dc.x, dc.y, dc.w, dc.h };
-
-	XSetForeground(dpy, dc.gc, col[ColBG].pixel);
-	XFillRectangles(dpy, dc.drawable, dc.gc, &r, 1);
-	if (!text)
-		return;
-
-	olen = strlen(text);
-	h = dc.font.ascent + dc.font.descent;
-	y = dc.y + (dc.h / 2) - (h / 2) + dc.font.ascent;
-	x = dc.x + (h / 2);
-
-	/* shorten text if necessary */
-	for (len = MIN(olen, sizeof(buf));
-		len && textnw(text, len) > dc.w - h; len--);
-
-	if (!len)
-		return;
-
-	memcpy(buf, text, len);
-	if (len < olen) {
-		for (i = len, j = strlen(titletrim); j && i;
-		     buf[--i] = titletrim[--j])
-			;
-	}
-
-	d = XftDrawCreate(dpy, dc.drawable, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
-	XftDrawStringUtf8(d, &col[ColFG], dc.font.xfont, x, y, (XftChar8 *) buf, len);
-	XftDrawDestroy(d);
 }
 
 void *
