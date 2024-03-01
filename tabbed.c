@@ -46,7 +46,6 @@
 #define MIN(a, b)               ((a) < (b) ? (a) : (b))
 #define LENGTH(x)               (sizeof((x)) / sizeof(*(x)))
 #define CLEANMASK(mask)         (mask & ~(numlockmask | LockMask))
-#define TEXTW(x)                (textnw(x, strlen(x)) + dc.font.height)
 
 enum { ColFG, ColBG, ColLast };       /* color */
 enum { WMProtocols, WMDelete, WMName, WMState, WMFullscreen,
@@ -71,12 +70,6 @@ typedef struct {
 	XftColor urg[ColLast];
 	Drawable drawable;
 	GC gc;
-	struct {
-		int ascent;
-		int descent;
-		int height;
-		XftFont *xfont;
-	} font;
 } DC; /* draw context */
 
 typedef struct {
@@ -110,7 +103,6 @@ static int getclient(Window w);
 static XftColor getcolor(const char *colstr);
 static int getfirsttab(void);
 static Bool gettextprop(Window w, Atom atom, char *text, unsigned int size);
-static void initfont(const char *fontstr);
 static Bool isprotodel(int c);
 static void keypress(const XEvent *e);
 static void killclient(const Arg *arg);
@@ -126,7 +118,6 @@ static void sendxembed(int c, long msg, long detail, long d1, long d2);
 static void setcmd(int argc, char *argv[], int);
 static void setup(void);
 static void spawn(const Arg *arg);
-static int textnw(const char *text, unsigned int len);
 static void toggle(const Arg *arg);
 static void unmanage(int c);
 static void unmapnotify(const XEvent *e);
@@ -184,7 +175,7 @@ buttonpress(const XEvent *e)
 	if (ev->y < 0 || ev->y > bh)
 		return;
 
-	if (((fc = getfirsttab()) > 0 && ev->x < TEXTW(before)) || ev->x < 0)
+	if (((fc = getfirsttab()) > 0 && ev->x < 0) || ev->x < 0)
 		return;
 
 	for (i = fc; i < nclients; i++) {
@@ -510,8 +501,6 @@ getfirsttab(void)
 		return 0;
 
 	cc = ww / tabwidth;
-	if (nclients > cc)
-		cc = (ww - TEXTW(before) - TEXTW(after)) / tabwidth;
 
 	ret = sel - cc / 2 + (cc + 1) % 2;
 	return ret < 0 ? 0 :
@@ -545,18 +534,6 @@ gettextprop(Window w, Atom atom, char *text, unsigned int size)
 	XFree(name.value);
 
 	return True;
-}
-
-void
-initfont(const char *fontstr)
-{
-	if (!(dc.font.xfont = XftFontOpenName(dpy, screen, fontstr))
-	    && !(dc.font.xfont = XftFontOpenName(dpy, screen, "fixed")))
-		die("error, cannot load font: '%s'\n", fontstr);
-
-	dc.font.ascent = dc.font.xfont->ascent;
-	dc.font.descent = dc.font.xfont->descent;
-	dc.font.height = dc.font.ascent + dc.font.descent;
 }
 
 Bool
@@ -910,8 +887,7 @@ setup(void)
 	/* init screen */
 	screen = DefaultScreen(dpy);
 	root = RootWindow(dpy, screen);
-	initfont(font);
-	bh = dc.h = 0;
+	bh = 0;
 
 	/* init atoms */
 	wmatom[WMDelete] = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
@@ -1033,14 +1009,6 @@ spawn(const Arg *arg)
 		perror(" failed");
 		exit(0);
 	}
-}
-
-int
-textnw(const char *text, unsigned int len)
-{
-	XGlyphInfo ext;
-	XftTextExtentsUtf8(dpy, dc.font.xfont, (XftChar8 *) text, len, &ext);
-	return ext.xOff;
 }
 
 void
